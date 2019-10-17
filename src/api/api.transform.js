@@ -47,6 +47,6 @@ extend(Chart.prototype, {
 		const options = ["pie", "donut"]
 			.indexOf(type) >= 0 ? {withTransform: true} : null;
 
-		transformTo.bind($$)(targetIds, type, options);
+		transformTo.call($$, targetIds, type, options);
 	}
 });

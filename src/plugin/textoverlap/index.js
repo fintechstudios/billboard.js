@@ -48,7 +48,7 @@ export default class TextOverlap extends Plugin {
 	$init() {
 		const $$ = this.$$;
 
-		$$.loadConfig.bind(this)(this.options);
+		$$.loadConfig.call(this, this.options);
 	}
 
 	$redraw() {

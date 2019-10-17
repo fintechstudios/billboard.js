@@ -78,21 +78,37 @@ extend(ChartInternal.prototype, {
 	generatePoint() {
 		const $$ = this;
 		const config = $$.config;
-		const ids = [];
-		const pattern = notEmpty(config.point_pattern) ? config.point_pattern : [config.point_type];
+		const patternConfig = notEmpty(config.point_pattern) ? config.point_pattern : [config.point_type];
+		const patterns = patternConfig.map(point => {
+			if ($$.hasValidPointType(point)) {
+				return [null, $$[point]];
+			}
+			if ($$.hasValidPointDrawMethods(point)) {
+				return [null, point];
+			}
+			return ["custom", point];
+		});
+
+		const idPatternMap = {};
+		let keysInMap = 0;
+		const getPatternForId = id => {
+			if (idPatternMap[id]) {
+				return idPatternMap[id];
+			}
+			const pattern = patterns[keysInMap % patterns.length];
+
+			keysInMap += 1;
+			idPatternMap[id] = pattern;
+			return pattern;
+		};
 
 		return function(method, context, ...args) {
 			return function(d) {
 				const id = d.id || (d.data && d.data.id) || d;
 				const element = d3Select(this);
+				const [patternType, point] = getPatternForId(id);
 
-				ids.indexOf(id) < 0 && ids.push(id);
-
-				let point = pattern[ids.indexOf(id) % pattern.length];
-
-				if ($$.hasValidPointType(point)) {
-					point = $$[point];
-				} else if (!$$.hasValidPointDrawMethods(point)) {
+				if (patternType === "custom") {
 					const pointId = `${$$.datetimeId}-point-${id}`;
 					const pointFromDefs = $$.pointFromDefs(pointId);
 
@@ -101,13 +117,13 @@ extend(ChartInternal.prototype, {
 					}
 
 					if (method === "create") {
-						return $$.custom.create.bind(context)(element, pointId, ...args);
+						return $$.custom.create.call(context, element, pointId, ...args);
 					} else if (method === "update") {
-						return $$.custom.update.bind(context)(element, ...args);
+						return $$.custom.update.call(context, element, ...args);
 					}
 				}
 
-				return point[method].bind(context)(element, ...args);
+				return point[method].call(context, element, ...args);
 			};
 		};
 	},

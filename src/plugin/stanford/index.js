@@ -104,7 +104,7 @@ export default class Stanford extends Plugin {
 	$init() {
 		const $$ = this.$$;
 
-		$$.loadConfig.bind(this)(this.options);
+		$$.loadConfig.call(this, this.options);
 		$$.color = this.getStanfordPointColor.bind($$);
 
 		this.colorScale = new ColorScale(this);

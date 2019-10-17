@@ -473,7 +473,7 @@ extend(ChartInternal.prototype, {
 			.attr("class", $$.classEvent.bind($$))
 			.style("cursor", config.data_selection_enabled && config.data_selection_grouped ? "pointer" : null)
 			.on("click", function(d) {
-				$$.clickHandlerForSingleX.bind(this)(d, $$);
+				$$.clickHandlerForSingleX.call(this, d, $$);
 			})
 			.call($$.getDraggableSelection());
 
@@ -559,7 +559,7 @@ extend(ChartInternal.prototype, {
 			.attr("height", $$.height)
 			.attr("class", CLASS.eventRect)
 			.on("click", function() {
-				$$.clickHandlerForMultipleXS.bind(this)($$);
+				$$.clickHandlerForMultipleXS.call(this, $$);
 			})
 			.call($$.getDraggableSelection());
 

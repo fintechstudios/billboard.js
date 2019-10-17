@@ -330,13 +330,13 @@ extend(ChartInternal.prototype, {
 					$$.onZoomEnd();
 				} else {
 					if ($$.isMultipleX()) {
-						$$.clickHandlerForMultipleXS.bind(this)($$);
+						$$.clickHandlerForMultipleXS.call(this, $$);
 					} else {
 						const event = d3Event.sourceEvent || d3Event;
 						const [x, y] = "clientX" in event ? [event.clientX, event.clientY] : [event.x, event.y];
 						const target = document.elementFromPoint(x, y);
 
-						$$.clickHandlerForSingleX.bind(target)(d3Select(target).datum(), $$);
+						$$.clickHandlerForSingleX.call(target, d3Select(target).datum(), $$);
 					}
 				}
 			});

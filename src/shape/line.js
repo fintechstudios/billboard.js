@@ -87,7 +87,7 @@ extend(ChartInternal.prototype, {
 
 		$$.mainLine = $$.mainLine.enter()
 			.append("path")
-			.attr("class", d => `${$$.classLine.bind($$)(d)} ${$$.extraLineClasses(d) || ""}`)
+			.attr("class", d => `${$$.classLine.call($$, d)} ${$$.extraLineClasses(d) || ""}`)
 			.style("stroke", $$.color)
 			.merge($$.mainLine)
 			.style("opacity", $$.initialOpacity.bind($$))

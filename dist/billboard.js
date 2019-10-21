@@ -8066,27 +8066,69 @@ extend(ChartInternal_ChartInternal.prototype, {
       return (isSub ? $$.getSubYScale(d.id) : $$.getYScale(d.id))(value);
     };
   },
-  getShapeOffset: function getShapeOffset(typeFilter, indices, isSub) {
+
+  /**
+   * @typedef {object} ShapeOffsetTarget
+   * @property {string} id - target id
+   * @property {object[]} rowValues - data point for each row (scaled as necessary)
+   * @property {object<number, object>} rowValueMapByXValue - each x value is a key,
+   *   mapped to the rowValue for that x value
+    * @property {number[]} values - value for each rowValue (normalized as necessary)
+   */
+
+  /**
+   * @param {function(Object): boolean} typeFilter
+   * @return {{shapeOffsetTargets: ShapeOffsetTarget[], indexMapByTargetId: object}}
+   */
+  getShapeOffsetData: function getShapeOffsetData(typeFilter) {
     var $$ = this,
         targets = $$.orderTargets($$.filterTargetsToShow($$.data.targets.filter(typeFilter, $$))),
-        targetIds = targets.map(function (t) {
-      return t.id;
-    });
+        shapeOffsetTargets = targets.map(function (target) {
+      var rowValues = target.values;
+      $$.isStepType(target) && (rowValues = $$.convertValuesToStep(rowValues));
+      var values,
+          rowValueMapByXValue = rowValues.reduce(function (out, value) {
+        return out[+value.x] = value, out;
+      }, {});
+      return values = $$.isStackNormalized() ? rowValues.map(function (v) {
+        return $$.getRatio("index", v, !0);
+      }) : rowValues.map(function (_ref) {
+        var value = _ref.value;
+        return value;
+      }), {
+        id: target.id,
+        rowValues: rowValues,
+        rowValueMapByXValue: rowValueMapByXValue,
+        values: values
+      };
+    }),
+        indexMapByTargetId = targets.reduce(function (out, _ref2, index) {
+      var id = _ref2.id;
+      return out[id] = index, out;
+    }, {});
+    return {
+      indexMapByTargetId: indexMapByTargetId,
+      shapeOffsetTargets: shapeOffsetTargets
+    };
+  },
+  getShapeOffset: function getShapeOffset(shapeOffsetData, indices, isSub) {
+    var $$ = this,
+        shapeOffsetTargets = shapeOffsetData.shapeOffsetTargets,
+        indexMapByTargetId = shapeOffsetData.indexMapByTargetId;
     return function (d, idx) {
       var scale = isSub ? $$.getSubYScale(d.id) : $$.getYScale(d.id),
           y0 = scale(0),
-          offset = y0,
-          i = idx;
-      return targets.forEach(function (t) {
-        var rowValues = $$.isStepType(d) ? $$.convertValuesToStep(t.values) : t.values,
-            values = rowValues.map(function (v) {
-          return $$.isStackNormalized() ? $$.getRatio("index", v, !0) : v.value;
-        });
-        t.id === d.id || indices[t.id] !== indices[d.id] || targetIds.indexOf(t.id) < targetIds.indexOf(d.id) && ((isUndefined(rowValues[i]) || +rowValues[i].x !== +d.x) && (i = -1, rowValues.forEach(function (v, j) {
-          var x1 = v.x.constructor === Date ? +v.x : v.x,
-              x2 = d.x.constructor === Date ? +d.x : d.x;
-          x1 === x2 && (i = j);
-        })), i in rowValues && rowValues[i].value * d.value >= 0 && (offset += scale(values[i]) - y0));
+          dataXAsNumber = +d.x,
+          offset = y0;
+      return shapeOffsetTargets.forEach(function (t) {
+        var rowValues = t.rowValues,
+            values = t.values;
+
+        if (t.id !== d.id && indices[t.id] === indices[d.id] && indexMapByTargetId[t.id] < indexMapByTargetId[d.id]) {
+          var _rowValue = rowValues[idx]; // check if the x values line up
+
+          _rowValue && +_rowValue.x === dataXAsNumber || (_rowValue = t.rowValueMapByXValue[dataXAsNumber]), _rowValue && _rowValue.value * d.value >= 0 && (offset += scale(values[_rowValue.index]) - y0);
+        }
       }), offset;
     };
   },
@@ -8629,7 +8671,8 @@ extend(ChartInternal_ChartInternal.prototype, {
         barW = $$.getBarW(axis, barTargetsNum),
         barX = $$.getShapeX(barW, barTargetsNum, barIndices, !!isSub),
         barY = $$.getShapeY(!!isSub),
-        barOffset = $$.getShapeOffset($$.isBarType, barIndices, !!isSub),
+        shapeOffsetData = $$.getShapeOffsetData($$.isBarType),
+        barOffset = $$.getShapeOffset(shapeOffsetData, barIndices, !!isSub),
         yScale = isSub ? $$.getSubYScale : $$.getYScale;
     return function (d, i) {
       var y0 = yScale.call($$, d.id)(0),
@@ -8845,7 +8888,8 @@ extend(ChartInternal_ChartInternal.prototype, {
         isSub = !!isSubValue,
         x = $$.getShapeX(0, lineTargetsNum, lineIndices, isSub),
         y = $$.getShapeY(isSub),
-        lineOffset = $$.getShapeOffset($$.isLineType, lineIndices, isSub),
+        shapeOffsetData = $$.getShapeOffsetData($$.isLineType),
+        lineOffset = $$.getShapeOffset(shapeOffsetData, lineIndices, isSub),
         yScale = isSub ? $$.getSubYScale : $$.getYScale;
     return function (d, i) {
       var y0 = yScale.call($$, d.id)(0),
@@ -9034,7 +9078,8 @@ extend(ChartInternal_ChartInternal.prototype, {
         areaTargetsNum = areaIndices.__max__ + 1,
         x = $$.getShapeX(0, areaTargetsNum, areaIndices, !!isSub),
         y = $$.getShapeY(!!isSub),
-        areaOffset = $$.getShapeOffset($$.isAreaType, areaIndices, !!isSub),
+        shapeOffsetData = $$.getShapeOffsetData($$.isAreaType),
+        areaOffset = $$.getShapeOffset(shapeOffsetData, areaIndices, !!isSub),
         yScale = isSub ? $$.getSubYScale : $$.getYScale;
     return function (d, i) {
       var y0 = yScale.call($$, d.id)(0),
@@ -9077,11 +9122,12 @@ extend(ChartInternal_ChartInternal.prototype, {
     return $$.config.zoom_enabled && $$.zoomScale ? hasValue ? $$.zoomScale(d.x) : null : hasValue ? $$.x(d.x) : null;
   },
   updateCircleY: function updateCircleY() {
-    var $$ = this;
+    var $$ = this,
+        getPoints = $$.generateGetLinePoints($$.getShapeIndices($$.isLineType), !1);
 
     $$.circleY = function (d, i) {
       var id = d.id;
-      return $$.isGrouped(id) ? $$.generateGetLinePoints($$.getShapeIndices($$.isLineType))(d, i)[0][1] : $$.getYScale(id)($$.getBaseValue(d));
+      return $$.isGrouped(id) ? getPoints(d, i)[0][1] : $$.getYScale(id)($$.getBaseValue(d));
     };
   },
   getCircles: function getCircles(i, id) {

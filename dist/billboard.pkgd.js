@@ -15750,8 +15750,7 @@ var _brighter = 1 / _darker;
 var reI = "\\s*([+-]?\\d+)\\s*",
     reN = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\s*",
     reP = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)%\\s*",
-    reHex3 = /^#([0-9a-f]{3})$/,
-    reHex6 = /^#([0-9a-f]{6})$/,
+    reHex = /^#([0-9a-f]{3,8})$/,
     reRgbInteger = new RegExp("^rgb\\(" + [reI, reI, reI] + "\\)$"),
     reRgbPercent = new RegExp("^rgb\\(" + [reP, reP, reP] + "\\)$"),
     reRgbaInteger = new RegExp("^rgba\\(" + [reI, reI, reI, reN] + "\\)$"),
@@ -15936,11 +15935,14 @@ function color_formatRgb() {
 }
 
 function color_color(format) {
-  var m;
+  var m, l;
   format = (format + "").trim().toLowerCase();
-  return (m = reHex3.exec(format)) ? (m = parseInt(m[1], 16), new Rgb(m >> 8 & 0xf | m >> 4 & 0x0f0, m >> 4 & 0xf | m & 0xf0, (m & 0xf) << 4 | m & 0xf, 1) // #f00
-  ) : (m = reHex6.exec(format)) ? rgbn(parseInt(m[1], 16)) // #ff0000
-  : (m = reRgbInteger.exec(format)) ? new Rgb(m[1], m[2], m[3], 1) // rgb(255, 0, 0)
+  return (m = reHex.exec(format)) ? (l = m[1].length, m = parseInt(m[1], 16), l === 6 ? rgbn(m) // #ff0000
+  : l === 3 ? new Rgb(m >> 8 & 0xf | m >> 4 & 0xf0, m >> 4 & 0xf | m & 0xf0, (m & 0xf) << 4 | m & 0xf, 1) // #f00
+  : l === 8 ? new Rgb(m >> 24 & 0xff, m >> 16 & 0xff, m >> 8 & 0xff, (m & 0xff) / 0xff) // #ff000000
+  : l === 4 ? new Rgb(m >> 12 & 0xf | m >> 8 & 0xf0, m >> 8 & 0xf | m >> 4 & 0xf0, m >> 4 & 0xf | m & 0xf0, ((m & 0xf) << 4 | m & 0xf) / 0xff) // #f000
+  : null // invalid hex
+  ) : (m = reRgbInteger.exec(format)) ? new Rgb(m[1], m[2], m[3], 1) // rgb(255, 0, 0)
   : (m = reRgbPercent.exec(format)) ? new Rgb(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, 1) // rgb(100%, 0%, 0%)
   : (m = reRgbaInteger.exec(format)) ? rgba(m[1], m[2], m[3], m[4]) // rgba(255, 0, 0, 1)
   : (m = reRgbaPercent.exec(format)) ? rgba(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, m[4]) // rgb(100%, 0%, 0%, 1)
@@ -16976,12 +16978,518 @@ function tweenValue(transition, name, value) {
     return schedule_get(node, id).value[name];
   };
 }
+// CONCATENATED MODULE: ./node_modules/d3-transition/node_modules/d3-color/src/define.js
+/* harmony default export */ var src_define = (function (constructor, factory, prototype) {
+  constructor.prototype = factory.prototype = prototype;
+  prototype.constructor = constructor;
+});
+function define_extend(parent, definition) {
+  var prototype = Object.create(parent.prototype);
+
+  for (var key in definition) {
+    prototype[key] = definition[key];
+  }
+
+  return prototype;
+}
+// CONCATENATED MODULE: ./node_modules/d3-transition/node_modules/d3-color/src/color.js
+
+function color_Color() {}
+var color_darker = 0.7;
+
+
+var color_brighter = 1 / color_darker;
+
+
+var color_reI = "\\s*([+-]?\\d+)\\s*",
+    color_reN = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\s*",
+    color_reP = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)%\\s*",
+    reHex3 = /^#([0-9a-f]{3})$/,
+    reHex6 = /^#([0-9a-f]{6})$/,
+    color_reRgbInteger = new RegExp("^rgb\\(" + [color_reI, color_reI, color_reI] + "\\)$"),
+    color_reRgbPercent = new RegExp("^rgb\\(" + [color_reP, color_reP, color_reP] + "\\)$"),
+    color_reRgbaInteger = new RegExp("^rgba\\(" + [color_reI, color_reI, color_reI, color_reN] + "\\)$"),
+    color_reRgbaPercent = new RegExp("^rgba\\(" + [color_reP, color_reP, color_reP, color_reN] + "\\)$"),
+    color_reHslPercent = new RegExp("^hsl\\(" + [color_reN, color_reP, color_reP] + "\\)$"),
+    color_reHslaPercent = new RegExp("^hsla\\(" + [color_reN, color_reP, color_reP, color_reN] + "\\)$");
+var color_named = {
+  aliceblue: 0xf0f8ff,
+  antiquewhite: 0xfaebd7,
+  aqua: 0x00ffff,
+  aquamarine: 0x7fffd4,
+  azure: 0xf0ffff,
+  beige: 0xf5f5dc,
+  bisque: 0xffe4c4,
+  black: 0x000000,
+  blanchedalmond: 0xffebcd,
+  blue: 0x0000ff,
+  blueviolet: 0x8a2be2,
+  brown: 0xa52a2a,
+  burlywood: 0xdeb887,
+  cadetblue: 0x5f9ea0,
+  chartreuse: 0x7fff00,
+  chocolate: 0xd2691e,
+  coral: 0xff7f50,
+  cornflowerblue: 0x6495ed,
+  cornsilk: 0xfff8dc,
+  crimson: 0xdc143c,
+  cyan: 0x00ffff,
+  darkblue: 0x00008b,
+  darkcyan: 0x008b8b,
+  darkgoldenrod: 0xb8860b,
+  darkgray: 0xa9a9a9,
+  darkgreen: 0x006400,
+  darkgrey: 0xa9a9a9,
+  darkkhaki: 0xbdb76b,
+  darkmagenta: 0x8b008b,
+  darkolivegreen: 0x556b2f,
+  darkorange: 0xff8c00,
+  darkorchid: 0x9932cc,
+  darkred: 0x8b0000,
+  darksalmon: 0xe9967a,
+  darkseagreen: 0x8fbc8f,
+  darkslateblue: 0x483d8b,
+  darkslategray: 0x2f4f4f,
+  darkslategrey: 0x2f4f4f,
+  darkturquoise: 0x00ced1,
+  darkviolet: 0x9400d3,
+  deeppink: 0xff1493,
+  deepskyblue: 0x00bfff,
+  dimgray: 0x696969,
+  dimgrey: 0x696969,
+  dodgerblue: 0x1e90ff,
+  firebrick: 0xb22222,
+  floralwhite: 0xfffaf0,
+  forestgreen: 0x228b22,
+  fuchsia: 0xff00ff,
+  gainsboro: 0xdcdcdc,
+  ghostwhite: 0xf8f8ff,
+  gold: 0xffd700,
+  goldenrod: 0xdaa520,
+  gray: 0x808080,
+  green: 0x008000,
+  greenyellow: 0xadff2f,
+  grey: 0x808080,
+  honeydew: 0xf0fff0,
+  hotpink: 0xff69b4,
+  indianred: 0xcd5c5c,
+  indigo: 0x4b0082,
+  ivory: 0xfffff0,
+  khaki: 0xf0e68c,
+  lavender: 0xe6e6fa,
+  lavenderblush: 0xfff0f5,
+  lawngreen: 0x7cfc00,
+  lemonchiffon: 0xfffacd,
+  lightblue: 0xadd8e6,
+  lightcoral: 0xf08080,
+  lightcyan: 0xe0ffff,
+  lightgoldenrodyellow: 0xfafad2,
+  lightgray: 0xd3d3d3,
+  lightgreen: 0x90ee90,
+  lightgrey: 0xd3d3d3,
+  lightpink: 0xffb6c1,
+  lightsalmon: 0xffa07a,
+  lightseagreen: 0x20b2aa,
+  lightskyblue: 0x87cefa,
+  lightslategray: 0x778899,
+  lightslategrey: 0x778899,
+  lightsteelblue: 0xb0c4de,
+  lightyellow: 0xffffe0,
+  lime: 0x00ff00,
+  limegreen: 0x32cd32,
+  linen: 0xfaf0e6,
+  magenta: 0xff00ff,
+  maroon: 0x800000,
+  mediumaquamarine: 0x66cdaa,
+  mediumblue: 0x0000cd,
+  mediumorchid: 0xba55d3,
+  mediumpurple: 0x9370db,
+  mediumseagreen: 0x3cb371,
+  mediumslateblue: 0x7b68ee,
+  mediumspringgreen: 0x00fa9a,
+  mediumturquoise: 0x48d1cc,
+  mediumvioletred: 0xc71585,
+  midnightblue: 0x191970,
+  mintcream: 0xf5fffa,
+  mistyrose: 0xffe4e1,
+  moccasin: 0xffe4b5,
+  navajowhite: 0xffdead,
+  navy: 0x000080,
+  oldlace: 0xfdf5e6,
+  olive: 0x808000,
+  olivedrab: 0x6b8e23,
+  orange: 0xffa500,
+  orangered: 0xff4500,
+  orchid: 0xda70d6,
+  palegoldenrod: 0xeee8aa,
+  palegreen: 0x98fb98,
+  paleturquoise: 0xafeeee,
+  palevioletred: 0xdb7093,
+  papayawhip: 0xffefd5,
+  peachpuff: 0xffdab9,
+  peru: 0xcd853f,
+  pink: 0xffc0cb,
+  plum: 0xdda0dd,
+  powderblue: 0xb0e0e6,
+  purple: 0x800080,
+  rebeccapurple: 0x663399,
+  red: 0xff0000,
+  rosybrown: 0xbc8f8f,
+  royalblue: 0x4169e1,
+  saddlebrown: 0x8b4513,
+  salmon: 0xfa8072,
+  sandybrown: 0xf4a460,
+  seagreen: 0x2e8b57,
+  seashell: 0xfff5ee,
+  sienna: 0xa0522d,
+  silver: 0xc0c0c0,
+  skyblue: 0x87ceeb,
+  slateblue: 0x6a5acd,
+  slategray: 0x708090,
+  slategrey: 0x708090,
+  snow: 0xfffafa,
+  springgreen: 0x00ff7f,
+  steelblue: 0x4682b4,
+  tan: 0xd2b48c,
+  teal: 0x008080,
+  thistle: 0xd8bfd8,
+  tomato: 0xff6347,
+  turquoise: 0x40e0d0,
+  violet: 0xee82ee,
+  wheat: 0xf5deb3,
+  white: 0xffffff,
+  whitesmoke: 0xf5f5f5,
+  yellow: 0xffff00,
+  yellowgreen: 0x9acd32
+};
+src_define(color_Color, src_color_color, {
+  displayable: function displayable() {
+    return this.rgb().displayable();
+  },
+  hex: function hex() {
+    return this.rgb().hex();
+  },
+  toString: function toString() {
+    return this.rgb() + "";
+  }
+});
+function src_color_color(format) {
+  var m;
+  format = (format + "").trim().toLowerCase();
+  return (m = reHex3.exec(format)) ? (m = parseInt(m[1], 16), new color_Rgb(m >> 8 & 0xf | m >> 4 & 0x0f0, m >> 4 & 0xf | m & 0xf0, (m & 0xf) << 4 | m & 0xf, 1) // #f00
+  ) : (m = reHex6.exec(format)) ? color_rgbn(parseInt(m[1], 16)) // #ff0000
+  : (m = color_reRgbInteger.exec(format)) ? new color_Rgb(m[1], m[2], m[3], 1) // rgb(255, 0, 0)
+  : (m = color_reRgbPercent.exec(format)) ? new color_Rgb(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, 1) // rgb(100%, 0%, 0%)
+  : (m = color_reRgbaInteger.exec(format)) ? color_rgba(m[1], m[2], m[3], m[4]) // rgba(255, 0, 0, 1)
+  : (m = color_reRgbaPercent.exec(format)) ? color_rgba(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, m[4]) // rgb(100%, 0%, 0%, 1)
+  : (m = color_reHslPercent.exec(format)) ? color_hsla(m[1], m[2] / 100, m[3] / 100, 1) // hsl(120, 50%, 50%)
+  : (m = color_reHslaPercent.exec(format)) ? color_hsla(m[1], m[2] / 100, m[3] / 100, m[4]) // hsla(120, 50%, 50%, 1)
+  : color_named.hasOwnProperty(format) ? color_rgbn(color_named[format]) : format === "transparent" ? new color_Rgb(NaN, NaN, NaN, 0) : null;
+}
+
+function color_rgbn(n) {
+  return new color_Rgb(n >> 16 & 0xff, n >> 8 & 0xff, n & 0xff, 1);
+}
+
+function color_rgba(r, g, b, a) {
+  if (a <= 0) r = g = b = NaN;
+  return new color_Rgb(r, g, b, a);
+}
+
+function color_rgbConvert(o) {
+  if (!(o instanceof color_Color)) o = src_color_color(o);
+  if (!o) return new color_Rgb();
+  o = o.rgb();
+  return new color_Rgb(o.r, o.g, o.b, o.opacity);
+}
+function src_color_rgb(r, g, b, opacity) {
+  return arguments.length === 1 ? color_rgbConvert(r) : new color_Rgb(r, g, b, opacity == null ? 1 : opacity);
+}
+function color_Rgb(r, g, b, opacity) {
+  this.r = +r;
+  this.g = +g;
+  this.b = +b;
+  this.opacity = +opacity;
+}
+src_define(color_Rgb, src_color_rgb, define_extend(color_Color, {
+  brighter: function brighter(k) {
+    k = k == null ? color_brighter : Math.pow(color_brighter, k);
+    return new color_Rgb(this.r * k, this.g * k, this.b * k, this.opacity);
+  },
+  darker: function darker(k) {
+    k = k == null ? color_darker : Math.pow(color_darker, k);
+    return new color_Rgb(this.r * k, this.g * k, this.b * k, this.opacity);
+  },
+  rgb: function rgb() {
+    return this;
+  },
+  displayable: function displayable() {
+    return 0 <= this.r && this.r <= 255 && 0 <= this.g && this.g <= 255 && 0 <= this.b && this.b <= 255 && 0 <= this.opacity && this.opacity <= 1;
+  },
+  hex: function hex() {
+    return "#" + _hex(this.r) + _hex(this.g) + _hex(this.b);
+  },
+  toString: function toString() {
+    var a = this.opacity;
+    a = isNaN(a) ? 1 : Math.max(0, Math.min(1, a));
+    return (a === 1 ? "rgb(" : "rgba(") + Math.max(0, Math.min(255, Math.round(this.r) || 0)) + ", " + Math.max(0, Math.min(255, Math.round(this.g) || 0)) + ", " + Math.max(0, Math.min(255, Math.round(this.b) || 0)) + (a === 1 ? ")" : ", " + a + ")");
+  }
+}));
+
+function _hex(value) {
+  value = Math.max(0, Math.min(255, Math.round(value) || 0));
+  return (value < 16 ? "0" : "") + value.toString(16);
+}
+
+function color_hsla(h, s, l, a) {
+  if (a <= 0) h = s = l = NaN;else if (l <= 0 || l >= 1) h = s = NaN;else if (s <= 0) h = NaN;
+  return new color_Hsl(h, s, l, a);
+}
+
+function color_hslConvert(o) {
+  if (o instanceof color_Hsl) return new color_Hsl(o.h, o.s, o.l, o.opacity);
+  if (!(o instanceof color_Color)) o = src_color_color(o);
+  if (!o) return new color_Hsl();
+  if (o instanceof color_Hsl) return o;
+  o = o.rgb();
+  var r = o.r / 255,
+      g = o.g / 255,
+      b = o.b / 255,
+      min = Math.min(r, g, b),
+      max = Math.max(r, g, b),
+      h = NaN,
+      s = max - min,
+      l = (max + min) / 2;
+
+  if (s) {
+    if (r === max) h = (g - b) / s + (g < b) * 6;else if (g === max) h = (b - r) / s + 2;else h = (r - g) / s + 4;
+    s /= l < 0.5 ? max + min : 2 - max - min;
+    h *= 60;
+  } else {
+    s = l > 0 && l < 1 ? 0 : h;
+  }
+
+  return new color_Hsl(h, s, l, o.opacity);
+}
+function color_hsl(h, s, l, opacity) {
+  return arguments.length === 1 ? color_hslConvert(h) : new color_Hsl(h, s, l, opacity == null ? 1 : opacity);
+}
+
+function color_Hsl(h, s, l, opacity) {
+  this.h = +h;
+  this.s = +s;
+  this.l = +l;
+  this.opacity = +opacity;
+}
+
+src_define(color_Hsl, color_hsl, define_extend(color_Color, {
+  brighter: function brighter(k) {
+    k = k == null ? color_brighter : Math.pow(color_brighter, k);
+    return new color_Hsl(this.h, this.s, this.l * k, this.opacity);
+  },
+  darker: function darker(k) {
+    k = k == null ? color_darker : Math.pow(color_darker, k);
+    return new color_Hsl(this.h, this.s, this.l * k, this.opacity);
+  },
+  rgb: function rgb() {
+    var h = this.h % 360 + (this.h < 0) * 360,
+        s = isNaN(h) || isNaN(this.s) ? 0 : this.s,
+        l = this.l,
+        m2 = l + (l < 0.5 ? l : 1 - l) * s,
+        m1 = 2 * l - m2;
+    return new color_Rgb(color_hsl2rgb(h >= 240 ? h - 240 : h + 120, m1, m2), color_hsl2rgb(h, m1, m2), color_hsl2rgb(h < 120 ? h + 240 : h - 120, m1, m2), this.opacity);
+  },
+  displayable: function displayable() {
+    return (0 <= this.s && this.s <= 1 || isNaN(this.s)) && 0 <= this.l && this.l <= 1 && 0 <= this.opacity && this.opacity <= 1;
+  }
+}));
+/* From FvD 13.37, CSS Color Module Level 3 */
+
+function color_hsl2rgb(h, m1, m2) {
+  return (h < 60 ? m1 + (m2 - m1) * h / 60 : h < 180 ? m2 : h < 240 ? m1 + (m2 - m1) * (240 - h) / 60 : m1) * 255;
+}
+// CONCATENATED MODULE: ./node_modules/d3-transition/node_modules/d3-color/src/math.js
+var math_deg2rad = Math.PI / 180;
+var math_rad2deg = 180 / Math.PI;
+// CONCATENATED MODULE: ./node_modules/d3-transition/node_modules/d3-color/src/lab.js
+
+
+ // https://beta.observablehq.com/@mbostock/lab-and-rgb
+
+var lab_K = 18,
+    lab_Xn = 0.96422,
+    lab_Yn = 1,
+    lab_Zn = 0.82521,
+    src_lab_t0 = 4 / 29,
+    src_lab_t1 = 6 / 29,
+    src_lab_t2 = 3 * src_lab_t1 * src_lab_t1,
+    lab_t3 = src_lab_t1 * src_lab_t1 * src_lab_t1;
+
+function lab_labConvert(o) {
+  if (o instanceof lab_Lab) return new lab_Lab(o.l, o.a, o.b, o.opacity);
+
+  if (o instanceof lab_Hcl) {
+    if (isNaN(o.h)) return new lab_Lab(o.l, 0, 0, o.opacity);
+    var h = o.h * math_deg2rad;
+    return new lab_Lab(o.l, Math.cos(h) * o.c, Math.sin(h) * o.c, o.opacity);
+  }
+
+  if (!(o instanceof color_Rgb)) o = color_rgbConvert(o);
+  var r = lab_rgb2lrgb(o.r),
+      g = lab_rgb2lrgb(o.g),
+      b = lab_rgb2lrgb(o.b),
+      y = lab_xyz2lab((0.2225045 * r + 0.7168786 * g + 0.0606169 * b) / lab_Yn),
+      x,
+      z;
+  if (r === g && g === b) x = z = y;else {
+    x = lab_xyz2lab((0.4360747 * r + 0.3850649 * g + 0.1430804 * b) / lab_Xn);
+    z = lab_xyz2lab((0.0139322 * r + 0.0971045 * g + 0.7141733 * b) / lab_Zn);
+  }
+  return new lab_Lab(116 * y - 16, 500 * (x - y), 200 * (y - z), o.opacity);
+}
+
+function lab_gray(l, opacity) {
+  return new lab_Lab(l, 0, 0, opacity == null ? 1 : opacity);
+}
+function src_lab_lab(l, a, b, opacity) {
+  return arguments.length === 1 ? lab_labConvert(l) : new lab_Lab(l, a, b, opacity == null ? 1 : opacity);
+}
+function lab_Lab(l, a, b, opacity) {
+  this.l = +l;
+  this.a = +a;
+  this.b = +b;
+  this.opacity = +opacity;
+}
+src_define(lab_Lab, src_lab_lab, define_extend(color_Color, {
+  brighter: function brighter(k) {
+    return new lab_Lab(this.l + lab_K * (k == null ? 1 : k), this.a, this.b, this.opacity);
+  },
+  darker: function darker(k) {
+    return new lab_Lab(this.l - lab_K * (k == null ? 1 : k), this.a, this.b, this.opacity);
+  },
+  rgb: function rgb() {
+    var y = (this.l + 16) / 116,
+        x = isNaN(this.a) ? y : y + this.a / 500,
+        z = isNaN(this.b) ? y : y - this.b / 200;
+    x = lab_Xn * lab_lab2xyz(x);
+    y = lab_Yn * lab_lab2xyz(y);
+    z = lab_Zn * lab_lab2xyz(z);
+    return new color_Rgb(lab_lrgb2rgb(3.1338561 * x - 1.6168667 * y - 0.4906146 * z), lab_lrgb2rgb(-0.9787684 * x + 1.9161415 * y + 0.0334540 * z), lab_lrgb2rgb(0.0719453 * x - 0.2289914 * y + 1.4052427 * z), this.opacity);
+  }
+}));
+
+function lab_xyz2lab(t) {
+  return t > lab_t3 ? Math.pow(t, 1 / 3) : t / src_lab_t2 + src_lab_t0;
+}
+
+function lab_lab2xyz(t) {
+  return t > src_lab_t1 ? t * t * t : src_lab_t2 * (t - src_lab_t0);
+}
+
+function lab_lrgb2rgb(x) {
+  return 255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+}
+
+function lab_rgb2lrgb(x) {
+  return (x /= 255) <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+}
+
+function lab_hclConvert(o) {
+  if (o instanceof lab_Hcl) return new lab_Hcl(o.h, o.c, o.l, o.opacity);
+  if (!(o instanceof lab_Lab)) o = lab_labConvert(o);
+  if (o.a === 0 && o.b === 0) return new lab_Hcl(NaN, 0, o.l, o.opacity);
+  var h = Math.atan2(o.b, o.a) * math_rad2deg;
+  return new lab_Hcl(h < 0 ? h + 360 : h, Math.sqrt(o.a * o.a + o.b * o.b), o.l, o.opacity);
+}
+
+function lab_lch(l, c, h, opacity) {
+  return arguments.length === 1 ? lab_hclConvert(l) : new lab_Hcl(h, c, l, opacity == null ? 1 : opacity);
+}
+function lab_hcl(h, c, l, opacity) {
+  return arguments.length === 1 ? lab_hclConvert(h) : new lab_Hcl(h, c, l, opacity == null ? 1 : opacity);
+}
+function lab_Hcl(h, c, l, opacity) {
+  this.h = +h;
+  this.c = +c;
+  this.l = +l;
+  this.opacity = +opacity;
+}
+src_define(lab_Hcl, lab_hcl, define_extend(color_Color, {
+  brighter: function brighter(k) {
+    return new lab_Hcl(this.h, this.c, this.l + lab_K * (k == null ? 1 : k), this.opacity);
+  },
+  darker: function darker(k) {
+    return new lab_Hcl(this.h, this.c, this.l - lab_K * (k == null ? 1 : k), this.opacity);
+  },
+  rgb: function rgb() {
+    return lab_labConvert(this).rgb();
+  }
+}));
+// CONCATENATED MODULE: ./node_modules/d3-transition/node_modules/d3-color/src/cubehelix.js
+
+
+
+var cubehelix_A = -0.14861,
+    cubehelix_B = +1.78277,
+    cubehelix_C = -0.29227,
+    src_cubehelix_D = -0.90649,
+    src_cubehelix_E = +1.97294,
+    cubehelix_ED = src_cubehelix_E * src_cubehelix_D,
+    cubehelix_EB = src_cubehelix_E * cubehelix_B,
+    cubehelix_BC_DA = cubehelix_B * cubehelix_C - src_cubehelix_D * cubehelix_A;
+
+function cubehelix_cubehelixConvert(o) {
+  if (o instanceof cubehelix_Cubehelix) return new cubehelix_Cubehelix(o.h, o.s, o.l, o.opacity);
+  if (!(o instanceof color_Rgb)) o = color_rgbConvert(o);
+  var r = o.r / 255,
+      g = o.g / 255,
+      b = o.b / 255,
+      l = (cubehelix_BC_DA * b + cubehelix_ED * r - cubehelix_EB * g) / (cubehelix_BC_DA + cubehelix_ED - cubehelix_EB),
+      bl = b - l,
+      k = (src_cubehelix_E * (g - l) - cubehelix_C * bl) / src_cubehelix_D,
+      s = Math.sqrt(k * k + bl * bl) / (src_cubehelix_E * l * (1 - l)),
+      // NaN if l=0 or l=1
+  h = s ? Math.atan2(k, bl) * math_rad2deg - 120 : NaN;
+  return new cubehelix_Cubehelix(h < 0 ? h + 360 : h, s, l, o.opacity);
+}
+
+function d3_color_src_cubehelix_cubehelix(h, s, l, opacity) {
+  return arguments.length === 1 ? cubehelix_cubehelixConvert(h) : new cubehelix_Cubehelix(h, s, l, opacity == null ? 1 : opacity);
+}
+function cubehelix_Cubehelix(h, s, l, opacity) {
+  this.h = +h;
+  this.s = +s;
+  this.l = +l;
+  this.opacity = +opacity;
+}
+src_define(cubehelix_Cubehelix, d3_color_src_cubehelix_cubehelix, define_extend(color_Color, {
+  brighter: function brighter(k) {
+    k = k == null ? color_brighter : Math.pow(color_brighter, k);
+    return new cubehelix_Cubehelix(this.h, this.s, this.l * k, this.opacity);
+  },
+  darker: function darker(k) {
+    k = k == null ? color_darker : Math.pow(color_darker, k);
+    return new cubehelix_Cubehelix(this.h, this.s, this.l * k, this.opacity);
+  },
+  rgb: function rgb() {
+    var h = isNaN(this.h) ? 0 : (this.h + 120) * math_deg2rad,
+        l = +this.l,
+        a = isNaN(this.s) ? 0 : this.s * l * (1 - l),
+        cosh = Math.cos(h),
+        sinh = Math.sin(h);
+    return new color_Rgb(255 * (l + a * (cubehelix_A * cosh + cubehelix_B * sinh)), 255 * (l + a * (cubehelix_C * cosh + src_cubehelix_D * sinh)), 255 * (l + a * (src_cubehelix_E * cosh)), this.opacity);
+  }
+}));
+// CONCATENATED MODULE: ./node_modules/d3-transition/node_modules/d3-color/src/index.js
+
+
+
 // CONCATENATED MODULE: ./node_modules/d3-transition/src/transition/interpolate.js
 
 
 /* harmony default export */ var transition_interpolate = (function (a, b) {
   var c;
-  return (typeof b === "number" ? number : b instanceof color_color ? src_rgb : (c = color_color(b)) ? (b = c, src_rgb) : src_string)(a, b);
+  return (typeof b === "number" ? number : b instanceof src_color_color ? src_rgb : (c = src_color_color(b)) ? (b = c, src_rgb) : src_string)(a, b);
 });
 // CONCATENATED MODULE: ./node_modules/d3-transition/src/transition/attr.js
 
@@ -21106,10 +21614,8 @@ function normalize(a, b) {
   } : d3_scale_src_constant(isNaN(b) ? NaN : 0.5);
 }
 
-function clamper(domain) {
-  var a = domain[0],
-      b = domain[domain.length - 1],
-      t;
+function clamper(a, b) {
+  var t;
   if (a > b) t = a, a = b, b = t;
   return function (x) {
     return Math.max(a, Math.min(b, x));
@@ -21167,7 +21673,9 @@ function transformer() {
       input;
 
   function rescale() {
-    piecewise = Math.min(domain.length, range.length) > 2 ? polymap : bimap;
+    var n = Math.min(domain.length, range.length);
+    if (clamp !== continuous_identity) clamp = clamper(domain[0], domain[n - 1]);
+    piecewise = n > 2 ? polymap : bimap;
     output = input = null;
     return scale;
   }
@@ -21181,7 +21689,7 @@ function transformer() {
   };
 
   scale.domain = function (_) {
-    return arguments.length ? (domain = Array.from(_, d3_scale_src_number), clamp === continuous_identity || (clamp = clamper(domain)), rescale()) : domain.slice();
+    return arguments.length ? (domain = Array.from(_, d3_scale_src_number), rescale()) : domain.slice();
   };
 
   scale.range = function (_) {
@@ -21193,7 +21701,7 @@ function transformer() {
   };
 
   scale.clamp = function (_) {
-    return arguments.length ? (clamp = _ ? clamper(domain) : continuous_identity, scale) : clamp !== continuous_identity;
+    return arguments.length ? (clamp = _ ? true : continuous_identity, rescale()) : clamp !== continuous_identity;
   };
 
   scale.interpolate = function (_) {
@@ -21209,8 +21717,8 @@ function transformer() {
     return rescale();
   };
 }
-function continuous(transform, untransform) {
-  return transformer()(transform, untransform);
+function continuous() {
+  return transformer()(continuous_identity, continuous_identity);
 }
 // CONCATENATED MODULE: ./node_modules/d3-format/src/formatDecimal.js
 // Computes the decimal coefficient and exponent of the specified number x with
@@ -21663,7 +22171,7 @@ function linearish(scale) {
   return scale;
 }
 function src_linear_linear() {
-  var scale = continuous(continuous_identity, continuous_identity);
+  var scale = continuous();
 
   scale.copy = function () {
     return copy(scale, src_linear_linear());
@@ -21805,15 +22313,15 @@ function loggish(transform) {
         z = [];
 
     if (!(base % 1) && j - i < n) {
-      i = Math.round(i) - 1, j = Math.round(j) + 1;
-      if (u > 0) for (; i < j; ++i) {
+      i = Math.floor(i), j = Math.ceil(j);
+      if (u > 0) for (; i <= j; ++i) {
         for (k = 1, p = pows(i); k < base; ++k) {
           t = p * k;
           if (t < u) continue;
           if (t > v) break;
           z.push(t);
         }
-      } else for (; i < j; ++i) {
+      } else for (; i <= j; ++i) {
         for (k = base - 1, p = pows(i); k >= 1; --k) {
           t = p * k;
           if (t < u) continue;
@@ -21821,6 +22329,7 @@ function loggish(transform) {
           z.push(t);
         }
       }
+      if (!z.length) z = src_ticks(u, v, n);
     } else {
       z = src_ticks(i, j, Math.min(j - i, n)).map(pows);
     }
@@ -21946,6 +22455,66 @@ function pow() {
 }
 function sqrt() {
   return pow.apply(null, arguments).exponent(0.5);
+}
+// CONCATENATED MODULE: ./node_modules/d3-scale/src/radial.js
+
+
+
+
+
+function square(x) {
+  return Math.sign(x) * x * x;
+}
+
+function unsquare(x) {
+  return Math.sign(x) * Math.sqrt(Math.abs(x));
+}
+
+function radial() {
+  var squared = continuous(),
+      range = [0, 1],
+      round = false,
+      unknown;
+
+  function scale(x) {
+    var y = unsquare(squared(x));
+    return isNaN(y) ? unknown : round ? Math.round(y) : y;
+  }
+
+  scale.invert = function (y) {
+    return squared.invert(square(y));
+  };
+
+  scale.domain = function (_) {
+    return arguments.length ? (squared.domain(_), scale) : squared.domain();
+  };
+
+  scale.range = function (_) {
+    return arguments.length ? (squared.range((range = Array.from(_, d3_scale_src_number)).map(square)), scale) : range.slice();
+  };
+
+  scale.rangeRound = function (_) {
+    return scale.range(_).round(true);
+  };
+
+  scale.round = function (_) {
+    return arguments.length ? (round = !!_, scale) : round;
+  };
+
+  scale.clamp = function (_) {
+    return arguments.length ? (squared.clamp(_), scale) : squared.clamp();
+  };
+
+  scale.unknown = function (_) {
+    return arguments.length ? (unknown = _, scale) : unknown;
+  };
+
+  scale.copy = function () {
+    return radial(squared.domain(), range).round(round).clamp(squared.clamp()).unknown(unknown);
+  };
+
+  initRange.apply(scale, arguments);
+  return linearish(scale);
 }
 // CONCATENATED MODULE: ./node_modules/d3-scale/src/quantile.js
 
@@ -22150,7 +22719,7 @@ function time_number(t) {
 }
 
 function calendar(year, month, week, day, hour, minute, second, millisecond, format) {
-  var scale = continuous(continuous_identity, continuous_identity),
+  var scale = continuous(),
       invert = scale.invert,
       domain = scale.domain;
   var formatMillisecond = format(".%L"),
@@ -22289,6 +22858,10 @@ function sequential_transformer() {
     return arguments.length ? (interpolator = _, scale) : interpolator;
   };
 
+  scale.range = function () {
+    return [interpolator(0), interpolator(1)];
+  };
+
   scale.unknown = function (_) {
     return arguments.length ? (unknown = _, scale) : unknown;
   };
@@ -22350,7 +22923,7 @@ function sequentialQuantile() {
       interpolator = continuous_identity;
 
   function scale(x) {
-    if (!isNaN(x = +x)) return interpolator((bisect(domain, x) - 1) / (domain.length - 1));
+    if (!isNaN(x = +x)) return interpolator((bisect(domain, x, 1) - 1) / (domain.length - 1));
   }
 
   scale.domain = function (_) {
@@ -22388,6 +22961,12 @@ function sequentialQuantile() {
     return arguments.length ? (interpolator = _, scale) : interpolator;
   };
 
+  scale.range = function () {
+    return domain.map(function (d, i) {
+      return interpolator(i / (domain.length - 1));
+    });
+  };
+
   scale.copy = function () {
     return sequentialQuantile(interpolator).domain(domain);
   };
@@ -22415,6 +22994,7 @@ function diverging_transformer() {
   var x0 = 0,
       x1 = 0.5,
       x2 = 1,
+      s = 1,
       t0,
       t1,
       t2,
@@ -22426,13 +23006,13 @@ function diverging_transformer() {
       unknown;
 
   function scale(x) {
-    return isNaN(x = +x) ? unknown : (x = 0.5 + ((x = +transform(x)) - t1) * (x < t1 ? k10 : k21), interpolator(clamp ? Math.max(0, Math.min(1, x)) : x));
+    return isNaN(x = +x) ? unknown : (x = 0.5 + ((x = +transform(x)) - t1) * (s * x < s * t1 ? k10 : k21), interpolator(clamp ? Math.max(0, Math.min(1, x)) : x));
   }
 
   scale.domain = function (_) {
     var _ref, _ref2;
 
-    return arguments.length ? ((_ref = _, _ref2 = diverging_slicedToArray(_ref, 3), x0 = _ref2[0], x1 = _ref2[1], x2 = _ref2[2], _ref), t0 = transform(x0 = +x0), t1 = transform(x1 = +x1), t2 = transform(x2 = +x2), k10 = t0 === t1 ? 0 : 0.5 / (t1 - t0), k21 = t1 === t2 ? 0 : 0.5 / (t2 - t1), scale) : [x0, x1, x2];
+    return arguments.length ? ((_ref = _, _ref2 = diverging_slicedToArray(_ref, 3), x0 = _ref2[0], x1 = _ref2[1], x2 = _ref2[2], _ref), t0 = transform(x0 = +x0), t1 = transform(x1 = +x1), t2 = transform(x2 = +x2), k10 = t0 === t1 ? 0 : 0.5 / (t1 - t0), k21 = t1 === t2 ? 0 : 0.5 / (t2 - t1), s = t1 < t0 ? -1 : 1, scale) : [x0, x1, x2];
   };
 
   scale.clamp = function (_) {
@@ -22443,12 +23023,16 @@ function diverging_transformer() {
     return arguments.length ? (interpolator = _, scale) : interpolator;
   };
 
+  scale.range = function () {
+    return [interpolator(0), interpolator(0.5), interpolator(1)];
+  };
+
   scale.unknown = function (_) {
     return arguments.length ? (unknown = _, scale) : unknown;
   };
 
   return function (t) {
-    transform = t, t0 = t(x0), t1 = t(x1), t2 = t(x2), k10 = t0 === t1 ? 0 : 0.5 / (t1 - t0), k21 = t1 === t2 ? 0 : 0.5 / (t2 - t1);
+    transform = t, t0 = t(x0), t1 = t(x1), t2 = t(x2), k10 = t0 === t1 ? 0 : 0.5 / (t1 - t0), k21 = t1 === t2 ? 0 : 0.5 / (t2 - t1), s = t1 < t0 ? -1 : 1;
     return scale;
   };
 }
@@ -22493,6 +23077,7 @@ function divergingSqrt() {
   return divergingPow.apply(null, arguments).exponent(0.5);
 }
 // CONCATENATED MODULE: ./node_modules/d3-scale/src/index.js
+
 
 
 
@@ -30753,7 +31338,7 @@ var ka = 0.89081309152928522810,
   }
 });
 // CONCATENATED MODULE: ./node_modules/d3-shape/src/symbol/square.js
-/* harmony default export */ var square = ({
+/* harmony default export */ var symbol_square = ({
   draw: function draw(context, size) {
     var w = Math.sqrt(size),
         x = -w / 2;
@@ -30807,7 +31392,7 @@ var wye_c = -0.5,
 
 
 
-var symbols = [circle, symbol_cross, diamond, square, star, triangle, wye];
+var symbols = [circle, symbol_cross, diamond, symbol_square, star, triangle, wye];
 /* harmony default export */ var src_symbol = (function () {
   var type = d3_shape_src_constant(circle),
       size = d3_shape_src_constant(64),
@@ -32247,27 +32832,69 @@ util_extend(ChartInternal_ChartInternal.prototype, {
       return (isSub ? $$.getSubYScale(d.id) : $$.getYScale(d.id))(value);
     };
   },
-  getShapeOffset: function getShapeOffset(typeFilter, indices, isSub) {
+
+  /**
+   * @typedef {object} ShapeOffsetTarget
+   * @property {string} id - target id
+   * @property {object[]} rowValues - data point for each row (scaled as necessary)
+   * @property {object<number, object>} rowValueMapByXValue - each x value is a key,
+   *   mapped to the rowValue for that x value
+    * @property {number[]} values - value for each rowValue (normalized as necessary)
+   */
+
+  /**
+   * @param {function(Object): boolean} typeFilter
+   * @return {{shapeOffsetTargets: ShapeOffsetTarget[], indexMapByTargetId: object}}
+   */
+  getShapeOffsetData: function getShapeOffsetData(typeFilter) {
     var $$ = this,
         targets = $$.orderTargets($$.filterTargetsToShow($$.data.targets.filter(typeFilter, $$))),
-        targetIds = targets.map(function (t) {
-      return t.id;
-    });
+        shapeOffsetTargets = targets.map(function (target) {
+      var rowValues = target.values;
+      $$.isStepType(target) && (rowValues = $$.convertValuesToStep(rowValues));
+      var values,
+          rowValueMapByXValue = rowValues.reduce(function (out, value) {
+        return out[+value.x] = value, out;
+      }, {});
+      return values = $$.isStackNormalized() ? rowValues.map(function (v) {
+        return $$.getRatio("index", v, !0);
+      }) : rowValues.map(function (_ref) {
+        var value = _ref.value;
+        return value;
+      }), {
+        id: target.id,
+        rowValues: rowValues,
+        rowValueMapByXValue: rowValueMapByXValue,
+        values: values
+      };
+    }),
+        indexMapByTargetId = targets.reduce(function (out, _ref2, index) {
+      var id = _ref2.id;
+      return out[id] = index, out;
+    }, {});
+    return {
+      indexMapByTargetId: indexMapByTargetId,
+      shapeOffsetTargets: shapeOffsetTargets
+    };
+  },
+  getShapeOffset: function getShapeOffset(shapeOffsetData, indices, isSub) {
+    var $$ = this,
+        shapeOffsetTargets = shapeOffsetData.shapeOffsetTargets,
+        indexMapByTargetId = shapeOffsetData.indexMapByTargetId;
     return function (d, idx) {
       var scale = isSub ? $$.getSubYScale(d.id) : $$.getYScale(d.id),
           y0 = scale(0),
-          offset = y0,
-          i = idx;
-      return targets.forEach(function (t) {
-        var rowValues = $$.isStepType(d) ? $$.convertValuesToStep(t.values) : t.values,
-            values = rowValues.map(function (v) {
-          return $$.isStackNormalized() ? $$.getRatio("index", v, !0) : v.value;
-        });
-        t.id === d.id || indices[t.id] !== indices[d.id] || targetIds.indexOf(t.id) < targetIds.indexOf(d.id) && ((isUndefined(rowValues[i]) || +rowValues[i].x !== +d.x) && (i = -1, rowValues.forEach(function (v, j) {
-          var x1 = v.x.constructor === Date ? +v.x : v.x,
-              x2 = d.x.constructor === Date ? +d.x : d.x;
-          x1 === x2 && (i = j);
-        })), i in rowValues && rowValues[i].value * d.value >= 0 && (offset += scale(values[i]) - y0));
+          dataXAsNumber = +d.x,
+          offset = y0;
+      return shapeOffsetTargets.forEach(function (t) {
+        var rowValues = t.rowValues,
+            values = t.values;
+
+        if (t.id !== d.id && indices[t.id] === indices[d.id] && indexMapByTargetId[t.id] < indexMapByTargetId[d.id]) {
+          var _rowValue = rowValues[idx]; // check if the x values line up
+
+          _rowValue && +_rowValue.x === dataXAsNumber || (_rowValue = t.rowValueMapByXValue[dataXAsNumber]), _rowValue && _rowValue.value * d.value >= 0 && (offset += scale(values[_rowValue.index]) - y0);
+        }
       }), offset;
     };
   },
@@ -32807,7 +33434,8 @@ util_extend(ChartInternal_ChartInternal.prototype, {
         barW = $$.getBarW(axis, barTargetsNum),
         barX = $$.getShapeX(barW, barTargetsNum, barIndices, !!isSub),
         barY = $$.getShapeY(!!isSub),
-        barOffset = $$.getShapeOffset($$.isBarType, barIndices, !!isSub),
+        shapeOffsetData = $$.getShapeOffsetData($$.isBarType),
+        barOffset = $$.getShapeOffset(shapeOffsetData, barIndices, !!isSub),
         yScale = isSub ? $$.getSubYScale : $$.getYScale;
     return function (d, i) {
       var y0 = yScale.call($$, d.id)(0),
@@ -33023,7 +33651,8 @@ util_extend(ChartInternal_ChartInternal.prototype, {
         isSub = !!isSubValue,
         x = $$.getShapeX(0, lineTargetsNum, lineIndices, isSub),
         y = $$.getShapeY(isSub),
-        lineOffset = $$.getShapeOffset($$.isLineType, lineIndices, isSub),
+        shapeOffsetData = $$.getShapeOffsetData($$.isLineType),
+        lineOffset = $$.getShapeOffset(shapeOffsetData, lineIndices, isSub),
         yScale = isSub ? $$.getSubYScale : $$.getYScale;
     return function (d, i) {
       var y0 = yScale.call($$, d.id)(0),
@@ -33212,7 +33841,8 @@ util_extend(ChartInternal_ChartInternal.prototype, {
         areaTargetsNum = areaIndices.__max__ + 1,
         x = $$.getShapeX(0, areaTargetsNum, areaIndices, !!isSub),
         y = $$.getShapeY(!!isSub),
-        areaOffset = $$.getShapeOffset($$.isAreaType, areaIndices, !!isSub),
+        shapeOffsetData = $$.getShapeOffsetData($$.isAreaType),
+        areaOffset = $$.getShapeOffset(shapeOffsetData, areaIndices, !!isSub),
         yScale = isSub ? $$.getSubYScale : $$.getYScale;
     return function (d, i) {
       var y0 = yScale.call($$, d.id)(0),
@@ -33255,11 +33885,12 @@ util_extend(ChartInternal_ChartInternal.prototype, {
     return $$.config.zoom_enabled && $$.zoomScale ? hasValue ? $$.zoomScale(d.x) : null : hasValue ? $$.x(d.x) : null;
   },
   updateCircleY: function updateCircleY() {
-    var $$ = this;
+    var $$ = this,
+        getPoints = $$.generateGetLinePoints($$.getShapeIndices($$.isLineType), !1);
 
     $$.circleY = function (d, i) {
       var id = d.id;
-      return $$.isGrouped(id) ? $$.generateGetLinePoints($$.getShapeIndices($$.isLineType))(d, i)[0][1] : $$.getYScale(id)($$.getBaseValue(d));
+      return $$.isGrouped(id) ? getPoints(d, i)[0][1] : $$.getYScale(id)($$.getBaseValue(d));
     };
   },
   getCircles: function getCircles(i, id) {
